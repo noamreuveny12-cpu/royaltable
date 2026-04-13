@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RoyalTable - Lobby</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>RoyalTable Lobby</h1>
+
+    <div class="card">
+      <h2 id="welcome">Welcome</h2>
+      <p id="chips">Chips: 0</p>
+      <button onclick="playNow()">Play Now</button>
+      <button onclick="logout()">Logout</button>
+      <p id="status"></p>
+    </div>
+
+    <div class="card">
+      <h2>Add Friend</h2>
+      <input id="friendUsername" placeholder="Friend username" />
+      <button onclick="addFriend()">Add Friend</button>
+    </div>
+
+    <div class="card">
+      <h2>Friends</h2>
+      <ul id="friendsList"></ul>
+    </div>
+  </div>
+
+  <script>
+    let me = null;
+    let ws = null;
+
+    async function loadMe() {
+      const res = await fetch("/api/me");
+      if (!res.ok) {
+        location.href = "/";
+        return;
+      }
+
+      me = await res.json();
+      document.getElementById("welcome").innerText = "Welcome, " + me.username;
+      document.getElementById("chips").innerText = "Chips: " + me.chips;
+
+      connectSocket();
+      loadFriends();
+    }
+
+    function connectSocket() {
+      ws = new WebSocket(location.origin.replace("http", "ws"));
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          type: "LOBBY_JOIN",
+          userId: me.id,
+          username: me.username
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "MATCH_FOUND") {
+          document.getElementById("status").innerText =
+            "Match found! Table: " + data.tableId + " | Players: " + data.players.join(" vs ");
+        }
+      };
+    }
+
+    async function loadFriends() {
+      const res = await fetch("/api/friends");
+      const friends = await res.json();
+
+      const list = document.getElementById("friendsList");
+      list.innerHTML = "";
+
+      friends.forEach((friend) => {
+        const li = document.createElement("li");
+        li.innerText = friend.username + " — Chips: " + friend.chips;
+        list.appendChild(li);
+      });
+    }
+
+    async function addFriend() {
+      const username = document.getElementById("friendUsername").value.trim();
+
+      const res = await fetch("/api/friends/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById("friendUsername").value = "";
+        loadFriends();
+      } else {
+        alert(data.error || "Failed to add friend");
+      }
+    }
+
+    function playNow() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        document.getElementById("status").innerText = "Searching for table...";
+        ws.send(JSON.stringify({ type: "PLAY_NOW" }));
+      }
+    }
+
+    async function logout() {
+      await fetch("/api/logout", { method: "POST" });
+      location.href = "/";
+    }
+
+    loadMe();
+  </script>
+</body>
+</html>

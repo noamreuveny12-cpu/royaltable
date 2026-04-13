@@ -1,90 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>RoyalTable</title>
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: #0b3d2e;
-      color: white;
-      margin-top: 50px;
-    }
-
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    input {
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    #game {
-      display: none;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>RoyalTable - Login</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <div class="container">
+    <h1>🃏 RoyalTable</h1>
+    <p>Login or create an account</p>
 
-  <h1>🃏 RoyalTable</h1>
+    <div class="card">
+      <h2>Register</h2>
+      <input id="registerUsername" placeholder="Username" />
+      <input id="registerPassword" type="password" placeholder="Password" />
+      <button onclick="register()">Create Account</button>
+    </div>
 
-  <div id="menu">
-    <button onclick="createRoom()">Create Room</button><br>
+    <div class="card">
+      <h2>Login</h2>
+      <input id="loginUsername" placeholder="Username" />
+      <input id="loginPassword" type="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+    </div>
 
-    <input id="roomInput" placeholder="Enter room code">
-    <button onclick="joinRoom()">Join Room</button>
-  </div>
-
-  <div id="game">
-    <h2 id="roomTitle"></h2>
-    <p id="players">Players: 1</p>
+    <p id="message"></p>
   </div>
 
   <script>
-    let ws;
-    let roomId;
+    async function register() {
+      const username = document.getElementById("registerUsername").value.trim();
+      const password = document.getElementById("registerPassword").value.trim();
 
-    function createRoom() {
-      roomId = Math.random().toString(36).substring(2, 7);
-      startGame();
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        location.href = "/lobby";
+      } else {
+        document.getElementById("message").innerText = data.error || "Register failed";
+      }
     }
 
-    function joinRoom() {
-      roomId = document.getElementById("roomInput").value;
-      if (!roomId) return alert("Enter room code");
-      startGame();
-    }
+    async function login() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
 
-    function startGame() {
-      document.getElementById("menu").style.display = "none";
-      document.getElementById("game").style.display = "block";
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
 
-      document.getElementById("roomTitle").innerText = "Room: " + roomId;
-
-      ws = new WebSocket(location.origin.replace("http", "ws"));
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({
-          type: "JOIN_ROOM",
-          roomId: roomId
-        }));
-      };
-
-      ws.onmessage = (msg) => {
-        const data = JSON.parse(msg.data);
-
-        if (data.type === "PLAYERS") {
-          document.getElementById("players").innerText =
-            "Players: " + data.count;
-        }
-      };
+      const data = await res.json();
+      if (data.success) {
+        location.href = "/lobby";
+      } else {
+        document.getElementById("message").innerText = data.error || "Login failed";
+      }
     }
   </script>
-
 </body>
 </html>

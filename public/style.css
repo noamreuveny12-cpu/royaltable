@@ -1,0 +1,45 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b3d2e;
+  color: white;
+}
+
+.container {
+  max-width: 700px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 14px;
+}
+
+input {
+  padding: 12px;
+  margin: 8px;
+  width: 220px;
+  border: none;
+  border-radius: 8px;
+}
+
+button {
+  padding: 12px 18px;
+  margin: 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin: 8px 0;
+}
