@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Poker Club</title>
+</head>
+<body>
+  <h1>🃏 Poker Club</h1>
+  <p id="status">Connecting...</p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let roomId = params.get("room");
+
+    if (!roomId) {
+      roomId = Math.random().toString(36).substr(2, 5);
+      window.location.search = "?room=" + roomId;
+    }
+
+    const ws = new WebSocket("ws://" + location.host);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        type: "JOIN_ROOM",
+        roomId
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "PLAYERS") {
+        document.getElementById("status").innerText =
+          "Players in room: " + data.count;
+      }
+    };
+  </script>
+</body>
+</html>
