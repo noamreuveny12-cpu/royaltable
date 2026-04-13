@@ -24,11 +24,13 @@ wss.on("connection", (ws) => {
       rooms[roomId].push(ws);
       ws.roomId = roomId;
 
-      rooms[roomId].forEach(client => {
-        client.send(JSON.stringify({
-          type: "PLAYERS",
-          count: rooms[roomId].length
-        }));
+      rooms[roomId].forEach((client) => {
+        client.send(
+          JSON.stringify({
+            type: "PLAYERS",
+            count: rooms[roomId].length,
+          })
+        );
       });
     }
   });
@@ -36,7 +38,7 @@ wss.on("connection", (ws) => {
   ws.on("close", () => {
     const room = rooms[ws.roomId];
     if (room) {
-      rooms[ws.roomId] = room.filter(client => client !== ws);
+      rooms[ws.roomId] = room.filter((client) => client !== ws);
     }
   });
 });
@@ -46,5 +48,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
