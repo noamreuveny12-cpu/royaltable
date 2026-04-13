@@ -1,39 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Poker Club</title>
-</head>
-<body>
-  <h1>🃏 Poker Club</h1>
-  <p id="status">Connecting...</p>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    let roomId = params.get("room");
-
-    if (!roomId) {
-      roomId = Math.random().toString(36).substr(2, 5);
-      window.location.search = "?room=" + roomId;
+  <title>RoyalTable</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #0b3d2e;
+      color: white;
+      margin-top: 50px;
     }
 
-    const ws = new WebSocket("ws://" + location.host);
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({
-        type: "JOIN_ROOM",
-        roomId
-      }));
-    };
+    input {
+      padding: 10px;
+      font-size: 16px;
+    }
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    #game {
+      display: none;
+    }
+  </style>
+</head>
+<body>
 
-      if (data.type === "PLAYERS") {
-        document.getElementById("status").innerText =
-          "Players in room: " + data.count;
-      }
-    };
+  <h1>🃏 RoyalTable</h1>
+
+  <div id="menu">
+    <button onclick="createRoom()">Create Room</button><br>
+
+    <input id="roomInput" placeholder="Enter room code">
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+
+  <div id="game">
+    <h2 id="roomTitle"></h2>
+    <p id="players">Players: 1</p>
+  </div>
+
+  <script>
+    let ws;
+    let roomId;
+
+    function createRoom() {
+      roomId = Math.random().toString(36).substring(2, 7);
+      startGame();
+    }
+
+    function joinRoom() {
+      roomId = document.getElementById("roomInput").value;
+      if (!roomId) return alert("Enter room code");
+      startGame();
+    }
+
+    function startGame() {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("game").style.display = "block";
+
+      document.getElementById("roomTitle").innerText = "Room: " + roomId;
+
+      ws = new WebSocket(location.origin.replace("http", "ws"));
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          type: "JOIN_ROOM",
+          roomId: roomId
+        }));
+      };
+
+      ws.onmessage = (msg) => {
+        const data = JSON.parse(msg.data);
+
+        if (data.type === "PLAYERS") {
+          document.getElementById("players").innerText =
+            "Players: " + data.count;
+        }
+      };
+    }
   </script>
+
 </body>
 </html>
